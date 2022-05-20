@@ -1,11 +1,7 @@
-function loadTextResource(location, callback){
-    var request = new XMLHttpRequest();
-    request.open('GET',location,true);
-    request.onload= function(){
-        console.log(request.status);
-        callback(request.responseText);
-    };
-    request.send();
+async function loadTextResource(location){
+  var response = await fetch(location);
+  const text = await response.text();
+  return text;
 }
 
 function loadImage(location , callback){
@@ -26,10 +22,10 @@ function loadJSONResource(location, callback){
     });
 }
 
-async function loadObjResource(location,callback){
-    const response = await fetch('resources/models/cube/cube.obj');
+async function loadObjResource(location){
+    const response = await fetch(location);
     const text = await response.text();
-    callback(text);
+    return text;
 }
 
 function parseOBJ(text) {
