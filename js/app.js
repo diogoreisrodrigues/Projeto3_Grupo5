@@ -1,220 +1,205 @@
-let pointsArray = [];
-let texCoordsArray = [];
-
-let gl;
-let ctm;
-let modelViewMatrix;
-
-let program;
-
-const angle = 0.02; // rotation in radians
-
-// constants for rotating
-let xAxis = 0;
-let yAxis = 1;
-let zAxis = 2;
-let axis = xAxis;
-
-
-window.onload = function () {
+onload=() => {
     init();
 }
 
-function init() {
+const cubes=[];
+const pyramids=[];
+let canvas,renderer,scene,camera,currentObject,material,angle,z_pos,colorsArrayCube,vertexColorsCube,colorsArrayPyramid,vertexColorsPyramid,nElements,choseColorOrTexture,light;
+let scaleFactor=0.1;
 
-    // *** Get canvas ***
-    const canvas = document.getElementById('gl-canvas');
+function init(){
 
-    /** @type {WebGLRenderingContext} */ // ONLY FOR VS CODE
-    gl = canvas.getContext('webgl') || canvas.getContext("experimental-webgl");
-    if (!gl) {
-        alert('WebGL not supported');
-        return;
-    }
+    canvas= document.getElementById('gl-canvas');
+    renderer=new THREE.WebGLRenderer({canvas});
+    renderer.setClearColor(0xffffff);
+    scene=new THREE.Scene();
 
-    // *** Computes the cube ***
-    cube();
+    //Dados da camara
 
-    // *** Set viewport ***
-    gl.viewport(0, 0, canvas.width, canvas.height)
+    const fov=75;
+    const near=0.1;
+    const far = 5;
+    z_pos=3;
+    const aspect_r=canvas.width/canvas.height;
+    camera= new THREE.PerspectiveCamera(fov,aspect_r,near,far);
+    camera.position.z=z_pos;
 
-    // *** Set color to the canvas ***
-    gl.clearColor(1.0, 1.0, 1.0, 1.0)
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    gl.enable(gl.DEPTH_TEST);
+    //N de elementos a ser gerados na cena, assim como o uso de um innerHTML para dar display no index.html
+    generateObjects();
 
-    // *** Initialize vertex and fragment shader ***
-    program = initShaders(gl, "vertex-shader", "fragment-shader");
-    gl.useProgram(program);
+    document.getElementById("nElements").innerHTML = nElements;
+    document.getElementById("nCubes").innerHTML =  cubes.length;
+    document.getElementById("nPyramids").innerHTML = pyramids.length;
 
-    // *** Send position data to the GPU ***
-    let vBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(pointsArray), gl.STATIC_DRAW);
-
-    // *** Define the form of the data ***
-    let vPosition = gl.getAttribLocation(program, "vPosition");
-    gl.enableVertexAttribArray(vPosition);
-    gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
-
-    // *** Send texture data to the GPU ***
-    let tBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, tBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texCoordsArray), gl.STATIC_DRAW);
-
-    // *** Define the form of the data ***
-    let vTexCoord = gl.getAttribLocation(program, "vTexCoord");
-    gl.enableVertexAttribArray(vTexCoord);
-    gl.vertexAttribPointer(vTexCoord, 2, gl.FLOAT, false, 0, 0);
-
-    // *** Get a pointer for the model viewer
-    modelViewMatrix = gl.getUniformLocation(program, "modelViewMatrix");
-    ctm = mat4.create();
-
-    // Set the image for the texture
-    let image = new Image();
-    image.src = 'texture.png'
-    image.onload = function () {
-        configureTexture(image);
-    }
-
-    // *** Create the event listeners for the buttons
-    document.getElementById("rotateX").onclick = function () {
-        axis = xAxis;
-    };
-    document.getElementById("rotateY").onclick = function () {
-        axis = yAxis;
-    };
-    document.getElementById("rotateZ").onclick = function () {
-        axis = zAxis;
-    };
-
-    // *** Render ***
     render();
+}
+
+//Função usada para definir um random
+function generateRandomNumber(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
+/*function makeLight(lightType) {
 
 }
 
-function cube() {
-
-    // Specify the coordinates to draw
-    pointsArray = [
-        -.5, 0.5, 0.5,
-        -.5, -.5, 0.5,
-        0.5, -.5, 0.5,
-        -.5, 0.5, 0.5,
-        0.5, -.5, 0.5,
-        0.5, 0.5, 0.5,
-        0.5, 0.5, 0.5,
-        0.5, -.5, 0.5,
-        0.5, -.5, -.5,
-        0.5, 0.5, 0.5,
-        0.5, -.5, -.5,
-        0.5, 0.5, -.5,
-        0.5, -.5, 0.5,
-        -.5, -.5, 0.5,
-        -.5, -.5, -.5,
-        0.5, -.5, 0.5,
-        -.5, -.5, -.5,
-        0.5, -.5, -.5,
-        0.5, 0.5, -.5,
-        -.5, 0.5, -.5,
-        -.5, 0.5, 0.5,
-        0.5, 0.5, -.5,
-        -.5, 0.5, 0.5,
-        0.5, 0.5, 0.5,
-        -.5, -.5, -.5,
-        -.5, 0.5, -.5,
-        0.5, 0.5, -.5,
-        -.5, -.5, -.5,
-        0.5, 0.5, -.5,
-        0.5, -.5, -.5,
-        -.5, 0.5, -.5,
-        -.5, -.5, -.5,
-        -.5, -.5, 0.5,
-        -.5, 0.5, -.5,
-        -.5, -.5, 0.5,
-        -.5, 0.5, 0.5,
-    ];
-
-    // 
-    texCoordsArray = [
-        0, 0,
-        0, 1,
-        1, 1,
-        0, 0,
-        1, 1,
-        1, 0,
-        0, 0,
-        0, 1,
-        1, 1,
-        0, 0,
-        1, 1,
-        1, 0,
-        0, 0,
-        0, 1,
-        1, 1,
-        0, 0,
-        1, 1,
-        1, 0,
-        0, 0,
-        0, 1,
-        1, 1,
-        0, 0,
-        1, 1,
-        1, 0,
-        0, 0,
-        0, 1,
-        1, 1,
-        0, 0,
-        1, 1,
-        1, 0,
-        0, 0,
-        0, 1,
-        1, 1,
-        0, 0,
-        1, 1,
-        1, 0,
-    ];
-
-
+function removeObjects() {
+    for (let i = 0; i < cubes.length; i++) {
+        scene.remove(cubes[i]);
+    }
+    cubes.length = 0;
+    for (let i = 0; i < pyramids.length; i++) {
+        scene.remove(pyramids[i]);
+    }
+    pyramids.length = 0;
 }
 
-function render() {
-    // Clear the canvas
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    // Apply rotation
-    switch (axis) {
-        case xAxis:
-            mat4.rotateX(ctm, ctm, angle);
-            break;
-        case yAxis:
-            mat4.rotateY(ctm, ctm, angle);
-            break;
-        case zAxis:
-            mat4.rotateZ(ctm, ctm, angle);
-            break;
-        default:
-            return -1
+function prepareLight(){
+    document.getElementById("light_selector").onchange = function () {
+        scene.remove(light);
+        scene.remove(light.target);
+        let lightType = document.getElementById("light_selector").value;
+        makeLight(lightType);
     }
 
-    // Transfer the information to the model viewer
-    gl.uniformMatrix4fv(modelViewMatrix, false, ctm);
+    //TODO: Entender how this works
+    document.getElementById("material_selector").onchange = function () {
+        removeObjects();
+        let materialType = document.getElementById("material_selector").value;
 
-    // Draw the triangles
-    gl.drawArrays(gl.TRIANGLES, 0, pointsArray.length / 3);
+    }
+}*/
 
-    // Make the new frame
-    requestAnimationFrame(render);
+
+
+function generateObjects(){
+    nElements= Math.floor(generateRandomNumber(5,30));
+    for(let i =0; i<nElements;i++){
+        let generateObject=generateRandomNumber(0,100);
+        if(generateObject<50){
+            makeCube();
+            cubes.push(currentObject);
+        }
+        else{
+            makePyramid();
+            pyramids.push(currentObject);
+        }
+    }
 }
 
-function configureTexture(image) {
-    let texture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
-    gl.generateMipmap(gl.TEXTURE_2D);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.uniform1i(gl.getUniformLocation(program, "texture"), 0);
+//Função de criação do cubo
+function makeCube(){
+
+    //Gera valor aleatorio entre 0.1 e 0.5 para dimensão do cubo
+    const cubeSide= generateRandomNumber(0.1,0.5);
+    const loader = new THREE.TextureLoader();
+
+    choseColorOrTexture=generateRandomNumber(0,100);
+
+    //Cria a geometria, os vertices
+    colorsArrayCube=[];
+    vertexColorsCube =[];
+
+    //Coloca no vertexColors valores random, ou seja determina as cores de forma aleatoria
+    for (let randomColor = 0; randomColor < 6; randomColor++) {
+        vertexColorsCube[randomColor] = [Math.random(), Math.random(), Math.random()];
+    }
+
+    //Atribui as colores do vertexColors às diferentes faces do cubo
+    for (let face=0;face<6;face++) {
+        let faceColor=new THREE.Color();
+        faceColor.setRGB(vertexColorsCube[face][0], vertexColorsCube[face][1], vertexColorsCube[face][2]);
+        for(let vertex=0;vertex<6;vertex++){
+            colorsArrayCube.push(...faceColor);
+        }
+    }
+
+    //Definições da geometria, cor, e junção ao cubo
+    const geometry=new THREE.BoxGeometry(cubeSide,cubeSide,cubeSide).toNonIndexed();
+    geometry.setAttribute('color',new THREE.Float32BufferAttribute(colorsArrayCube,3));
+
+    if(choseColorOrTexture>50){
+        material = new THREE.MeshBasicMaterial({map: loader.load('Texture-1.png')});
+    }
+    else{
+        material= new THREE.MeshBasicMaterial({vertexColors:true});
+    }
+
+    const cube=new THREE.Mesh(geometry,material);
+
+    currentObject=cube;
+
+    //Definir posição do cubo
+    cube.position.set(generateRandomNumber(-10,10),generateRandomNumber(-1,1),generateRandomNumber(-10,10));
+    scene.add(cube);
+
+}
+
+//TODO:Corrigir, uma face e a base estão a ficar sem cor
+function makePyramid(){
+
+    choseColorOrTexture=generateRandomNumber(0,100);
+    const randomSize=generateRandomNumber(0.1,0.5);
+    const baseRadius=randomSize;
+    const height=randomSize;
+    const segments=3;
+    const loader = new THREE.TextureLoader();
+
+    //Cria a geometria, os vertices
+    colorsArrayPyramid=[];
+    vertexColorsPyramid=[];
+
+    //Coloca no vertexColors valores random, ou seja determina as cores de forma aleatoria
+    for (let randomColor = 0; randomColor < 4; randomColor++) {
+        vertexColorsPyramid[randomColor] = [Math.random(), Math.random(), Math.random()];
+    }
+
+    for (let face=0;face<3;face++){
+        let faceColor=new THREE.Color();
+        faceColor.setRGB(vertexColorsPyramid[face][0], vertexColorsPyramid[face][1], vertexColorsPyramid[face][2]);
+        for(let vertex=0;vertex<3;vertex++){
+            colorsArrayPyramid.push(...faceColor);
+        }
+    }
+
+    //Cria a geometria, os vertices
+    const geometry=new THREE.ConeGeometry(baseRadius,height,segments).toNonIndexed();
+    geometry.setAttribute('color',new THREE.Float32BufferAttribute(colorsArrayPyramid,3))
+    if(choseColorOrTexture>50){
+        material = new THREE.MeshBasicMaterial({map: loader.load('Texture-2.jpg')});
+    }
+    else{
+        material= new THREE.MeshBasicMaterial({vertexColors:true});
+    }
+    const pyramid=new THREE.Mesh(geometry,material);
+    currentObject=pyramid;
+    pyramid.position.set(generateRandomNumber(-10,10),generateRandomNumber(-1,1),generateRandomNumber(-10,10));
+    scene.add(pyramid);
+
+}
+
+function render(){
+
+    //translation (NO PROJETO O PROFESSOR QUER MEXER A CAMARA NAO O OBJETO)
+
+    //scaling
+    angle= generateRandomNumber(0,0.12);
+    //rotation
+    for(const pyramid of pyramids){
+
+        pyramid.rotation.x += angle;
+        pyramid.rotation.y += angle;
+        pyramid.rotation.z += angle;
+    }
+
+
+    for(const cube of cubes){
+
+        cube.rotation.x += angle;
+        cube.rotation.y += angle;
+        cube.rotation.z += angle;
+    }
+    renderer.render(scene,camera);
+    requestAnimationFrame(render);
 }
