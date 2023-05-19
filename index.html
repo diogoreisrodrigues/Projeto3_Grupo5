@@ -28,20 +28,46 @@
          }
       </script>
 
-      
+
    </head>
+
    <body>
-      <canvas id="gl-canvas" width="512" height="512">
-         Sorry, but your browser does not support HTML5's canvas element.
-      </canvas>
+      <div>
+         <div style="border: 5px solid black; width:800px ; height: 600px">
+            <canvas id="gl-canvas" width="800" height="600">
+               Sorry your browser does not support the canvas element
+            </canvas>
+         </div>
+         <div>
+            <p>The following code generated <span id="nElements"></span> elements. Of the following, <span id="nCubes"></span> are cubes and <span id="nPyramids"></span> are pyramids.</p>
+            <div>
+               Type of light:
+               <label for="light_selector"></label><select id="light_selector">
+                  <option value="ambient">Ambient</option>
+                  <option value="directional">Directional</option>
+               </select>
+               <br>
+               <br>
+               Type of material:
+               <label for="material_selector"></label><select id="material_selector">
+                  <option value="basic">Basic</option>
+                  <option value="phong">Phong</option>
+                  <option value="lambert">Lambert</option>
+               </select>
+            </div>
 
-      <button id="rotateX">Rotate X</button>
-      <button id="rotateY">Rotate Y</button>
-      <button id="rotateZ">Rotate Z</button>
-      
-      <script src="js/initShaders.js"></script>
-      <script src="js/gl-matrix-min.js"></script>
-      <script src="js/app.js"></script>
+         </div>
 
+
+
+
+
+
+         <script src="js/three.js"></script>
+         <script src="js/app.js"></script>
+         <script src="js/initShaders.js"></script>
+         <script src="js/gl-matrix-min.js"></script>
+         <script src="js/app.js"></script>
+      </div>
    </body>
 </html>
