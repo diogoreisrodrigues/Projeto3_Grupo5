@@ -4,7 +4,12 @@ onload=() => {
 
 const cubes=[];
 const pyramids=[];
-let canvas,renderer,scene,camera,currentObject,material,angle,z_pos,colorsArrayCube,vertexColorsCube,colorsArrayPyramid,vertexColorsPyramid,nElements,choseColorOrTexture,light;
+const cameraSpeed = 0.1;
+
+let canvas,renderer,scene,camera,currentObject,material,angle,colorsArrayCube,vertexColorsCube,colorsArrayPyramid,
+    vertexColorsPyramid,nElements,choseColorOrTexture,light;
+let xPosition=0.015,yPosition=0.015,zPosition=3;
+let targetX = xPosition, targetY = yPosition, targetZ = zPosition;
 let scaleFactor=0.1;
 
 function init(){
@@ -22,7 +27,9 @@ function init(){
     z_pos=3;
     const aspect_r=canvas.width/canvas.height;
     camera= new THREE.PerspectiveCamera(fov,aspect_r,near,far);
-    camera.position.z=z_pos;
+    camera.position.x=xPosition;
+    camera.position.y=yPosition;
+    camera.position.z=zPosition;
 
     //N de elementos a ser gerados na cena, assim como o uso de um innerHTML para dar display no index.html
     generateObjects();
@@ -32,6 +39,31 @@ function init(){
     document.getElementById("nPyramids").innerHTML = pyramids.length;
 
     render();
+}
+
+window.addEventListener("keydown", (e)=>{
+        switch(e.key){
+            case "a":
+                targetX -= cameraSpeed;
+                break;
+            case "w":
+                targetZ -= cameraSpeed;
+                break;
+            case "d":
+                targetX += cameraSpeed;
+                break;
+            case "s":
+                targetZ += cameraSpeed;
+                break;
+        }
+    }
+)
+
+function updateCamera() {
+    // Gradually move the camera towards the target position
+    camera.position.x += (targetX - camera.position.x) * 0.1;
+    camera.position.y += (targetY - camera.position.y) * 0.1;
+    camera.position.z += (targetZ - camera.position.z) * 0.1;
 }
 
 //Função usada para definir um random
@@ -56,6 +88,7 @@ function removeObjects() {
 
 
 function prepareLight(){
+
     document.getElementById("light_selector").onchange = function () {
         scene.remove(light);
         scene.remove(light.target);
@@ -70,8 +103,6 @@ function prepareLight(){
 
     }
 }*/
-
-
 
 function generateObjects(){
     nElements= Math.floor(generateRandomNumber(5,30));
@@ -120,7 +151,7 @@ function makeCube(){
     geometry.setAttribute('color',new THREE.Float32BufferAttribute(colorsArrayCube,3));
 
     if(choseColorOrTexture>50){
-        material = new THREE.MeshBasicMaterial({map: loader.load('Texture-1.png')});
+        material = new THREE.MeshBasicMaterial({map: loader.load('Texture-1.png')});    //Mudar para phnong
     }
     else{
         material= new THREE.MeshBasicMaterial({vertexColors:true});
@@ -155,10 +186,10 @@ function makePyramid(){
         vertexColorsPyramid[randomColor] = [Math.random(), Math.random(), Math.random()];
     }
 
-    for (let face=0;face<3;face++){
+    for (let face=0;face<4;face++){
         let faceColor=new THREE.Color();
         faceColor.setRGB(vertexColorsPyramid[face][0], vertexColorsPyramid[face][1], vertexColorsPyramid[face][2]);
-        for(let vertex=0;vertex<3;vertex++){
+        for(let vertex=0;vertex<3;vertex++){        //alterar para 4 pinta 3 faces mas fica com fade
             colorsArrayPyramid.push(...faceColor);
         }
     }
@@ -184,10 +215,10 @@ function render(){
     //translation (NO PROJETO O PROFESSOR QUER MEXER A CAMARA NAO O OBJETO)
 
     //scaling
-    angle= generateRandomNumber(0,0.12);
+
     //rotation
     for(const pyramid of pyramids){
-
+        angle= generateRandomNumber(0,0.12);
         pyramid.rotation.x += angle;
         pyramid.rotation.y += angle;
         pyramid.rotation.z += angle;
@@ -195,11 +226,14 @@ function render(){
 
 
     for(const cube of cubes){
-
+        angle= generateRandomNumber(0,0.12);
         cube.rotation.x += angle;
         cube.rotation.y += angle;
         cube.rotation.z += angle;
     }
+
+    updateCamera();
+
     renderer.render(scene,camera);
     requestAnimationFrame(render);
 }
