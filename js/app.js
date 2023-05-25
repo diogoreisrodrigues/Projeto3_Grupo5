@@ -9,6 +9,10 @@ const cubes = [];
 const pyramids = [];
 const objects = [];
 const cameraSpeed = 0.1;
+var light;
+var lightColor;
+var lightPosition;
+var lightIntensity;
 
 let canvas, renderer, scene, camera, currentObject, material, angle, colorsArrayCube, vertexColorsCube,
     colorsArrayPyramid, vertexColorsPyramid, nElements, choseColorOrTexture, typeOfElements, ambientLight, sunlight;
@@ -17,11 +21,16 @@ let xPosition = 0.015, yPosition = 0.015, zPosition = 3;
 
 let targetX = xPosition, targetY = yPosition, targetZ = zPosition;
 
+document.getElementById('light-color').addEventListener('change', applyLighting);
+document.getElementById('buttonLight').addEventListener('click', applyLighting);
+
+
+
 async function init() {
 
     canvas = document.getElementById('gl-canvas');
-    let light = document.getElementById('buttonLight');
-    light.onclick = applyLighting
+    //light = document.getElementById('buttonLight');
+    //light.onclick = applyLighting
     renderer = new THREE.WebGLRenderer({canvas});
     renderer.setClearColor(0xffffff);
     scene = new THREE.Scene();
@@ -40,9 +49,9 @@ async function init() {
     ambientLight = new THREE.AmbientLight(0x888888);
     scene.add(ambientLight);
 
-    sunlight = new THREE.DirectionalLight(0xffffff, 0.5);
-    sunlight.position.set(1.0, -4.0, -2.0);
-    scene.add(sunlight);
+    light = new THREE.DirectionalLight(0x000000, 0.5);
+    light.position.set(1.0, -4.0, -2.0);
+    scene.add(light);
 
     //N de elementos a ser gerados na cena, assim como o uso de um innerHTML para dar display no index.html
     await generateObjects();
@@ -130,14 +139,14 @@ async function make3DObject() {
             textureString = 'modelos/Astronaut.png';
             dimensions = 0.5; //Diferente porque caso contrario fica muito pequeno
         } else if (objectToLoad === 2) {
-            objectString = 'modelos/cat.obj';
-            textureString = 'modelos/cat_texture.png';
+            objectString = 'modelos/Astronaut.obj';
+            textureString = 'modelos/Astronaut.png';
         } else if (objectToLoad === 3) {
-            objectString = 'modelos/pig.obj';
-            textureString = 'modelos/pig.png';
+            objectString = 'modelos/Astronaut.obj';
+            textureString = 'modelos/Astronaut.png';
         } else {
-            objectString = 'modelos/trophy.obj';
-            textureString = 'modelos/trophy.jpg';
+            objectString = 'modelos/Astronaut.obj';
+            textureString = 'modelos/Astronaut.png';
         }
 
         loader.load(objectString,
@@ -172,21 +181,19 @@ async function make3DObject() {
 //TODO: Porquê que a luz não é adicionada à cena?
 function applyLighting() {
 
-    let amb_r = parseFloat(document.getElementById("ambient_r").value);
-    let amb_g = parseFloat(document.getElementById("ambient_g").value);
-    let amb_b = parseFloat(document.getElementById("ambient_b").value);
+    lightColor = document.getElementById('light-color').value;
+    lightIntensity = parseFloat(document.getElementById('light-intensity').value);
 
-    let sun_r = parseFloat(document.getElementById("sun_r").value);
-    let sun_g = parseFloat(document.getElementById("sun_g").value);
-    let sun_b = parseFloat(document.getElementById("sun_b").value);
+    lightPosition = {
+        x: parseFloat(document.getElementById('light-x').value),
+        y: parseFloat(document.getElementById('light-y').value),
+        z: parseFloat(document.getElementById('light-z').value)
+    };
 
-    let sun_x = parseFloat(document.getElementById("sun_x").value);
-    let sun_y = parseFloat(document.getElementById("sun_y").value);
-    let sun_z = parseFloat(document.getElementById("sun_z").value);
-
-    ambientLight.color.setRGB(amb_r, amb_g, amb_b);
-    sunlight.color.setRGB(sun_r, sun_g, sun_b);
-    sunlight.position.set(sun_x, sun_y, sun_z);
+    // Update the light's color and intensity
+    light.color.set(lightColor);
+    light.intensity = lightIntensity;
+    light.position.set(lightPosition.x, lightPosition.y, lightPosition.z);
 }
 
 
@@ -266,9 +273,9 @@ function makePyramid() {
     const geometry = new THREE.TetrahedronGeometry(radius, detail).toNonIndexed();
     geometry.setAttribute('color', new THREE.Float32BufferAttribute(colorsArrayPyramid, 3))
     if (choseColorOrTexture > 50) {
-        material = new THREE.MeshBasicMaterial({map: loader.load('Texture-2.jpg')});
+        material = new THREE.MeshStandardMaterial({map: loader.load('Texture-2.jpg')});
     } else {
-        material = new THREE.MeshBasicMaterial({vertexColors: true});
+        material = new THREE.MeshStandardMaterial({vertexColors: true});
     }
     const pyramid = new THREE.Mesh(geometry, material);
     currentObject = pyramid;

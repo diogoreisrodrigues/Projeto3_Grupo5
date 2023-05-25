@@ -84,14 +84,14 @@
                 </select>
             </label>
             <h3>Direction: </h3>
-            X: <label for="light_x"></label><input id="light_x" type="number">
-            Y: <label for="light_y"></label><input id="light_y" type="number">
-            Z: <label for="light_z"></label><input id="light_z" type="number"><br>
-            <h3>Color: </h3>
-            R: <label for="colorR"></label><input id="colorR" placeholder="0.0-0.1" type="number">
-            G: <label for="colorG"></label><input id="colorG" placeholder="0.0-0.1" type="number">
-            B: <label for="colorB"></label><input id="colorB" placeholder="0.0-0.1" type="number"><br>
+            X: <label for="light-x"></label><input id="light-x" type="number">
+            Y: <label for="light-y"></label><input id="light-y" type="number">
+            Z: <label for="light-z"></label><input id="light-z" type="number"><br>
+            <h3>Light Color:</h3>
+            <input type="color" id="light-color" value="#ffffff">
             <br>
+            <label for="light-intensity">Light Intensity:</label>
+            <input type="range" id="light-intensity" min="0" max="1" step="0.1" value="1"><br><br>
             <button id="buttonLight">Apply Lighting</button>
         </div>
     </div>
