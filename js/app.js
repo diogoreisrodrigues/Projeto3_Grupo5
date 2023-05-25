@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
+import {FirstPersonControls} from 'https://cdn.skypack.dev/three@0.136/examples/jsm/controls/FirstPersonControls.js';
 
 onload = () => {
     init();
@@ -8,14 +9,23 @@ onload = () => {
 const cubes = [];
 const pyramids = [];
 const objects = [];
-const cameraSpeed = 0.1;
+
+const rotationSpeed = 0.2; // Adjust this value to control the rotation speed
+let previousMouse = { x: 0, y: 0 };
+let accumulatedRotation = { x: 0, y: 0 };
 
 let canvas, renderer, scene, camera, currentObject, material, angle, colorsArrayCube, vertexColorsCube,
-    colorsArrayPyramid, vertexColorsPyramid, nElements, choseColorOrTexture, typeOfElements, ambientLight, sunlight;
+    colorsArrayPyramid, vertexColorsPyramid, nElements, choseColorOrTexture, typeOfElements, ambientLight, sunlight,
+    container;
 
 let xPosition = 0.015, yPosition = 0.015, zPosition = 3;
 
-let targetX = xPosition, targetY = yPosition, targetZ = zPosition;
+let movementForward = false;
+let movementBackward = false;
+let movementLeft = false;
+let movementRight = false;
+
+
 
 async function init() {
 
@@ -25,6 +35,7 @@ async function init() {
     renderer = new THREE.WebGLRenderer({canvas});
     renderer.setClearColor(0xffffff);
     scene = new THREE.Scene();
+
 
     //Dados da camara
 
@@ -51,37 +62,125 @@ async function init() {
     document.getElementById("nCubes").innerHTML = cubes.length;
     document.getElementById("nPyramids").innerHTML = pyramids.length;
     document.getElementById("nObjects").innerHTML = objects.length;
+
+    canvas.addEventListener("mousemove", onMouseMove, false);
+
+    animate();
+
     render();
 
 }
+function onMouseMove(event) {
+    // Calculate mouse position in normalized device coordinates
+    const mouse = {
+        x: (event.clientX / canvas.clientWidth) * 2 - 1,
+        y: -(event.clientY / canvas.clientHeight) * 2 + 1
+    };
 
+    // Check if the mouse is within the canvas boundaries
+    const isMouseWithinCanvas = mouse.x >= -1 && mouse.x <= 1 && mouse.y >= -1 && mouse.y <= 1;
+    // Calculate mouse movement delta
+    const mouseDelta = {
+        x: mouse.x - previousMouse.x,
+        y: mouse.y - previousMouse.y
+    };
+
+    // Update the camera rotation based on mouse movement (inverted left and right) with acceleration
+    if (isMouseWithinCanvas) {
+        // Update the accumulated rotation based on mouse movement
+        accumulatedRotation.x += mouseDelta.y * rotationSpeed;
+        accumulatedRotation.y -= mouseDelta.x * rotationSpeed;
+
+        // Update the camera rotation with the accumulated rotation
+        camera.rotation.x += accumulatedRotation.x;
+        camera.rotation.y += accumulatedRotation.y;
+
+        // Reset the previous mouse position for the next frame
+        previousMouse = mouse;
+
+    }
+}
+
+function animate() {
+    // Damping factor to gradually reduce the accumulated rotation
+    const dampingFactor = 0.95; // Adjust this value to control the damping
+
+    // Apply damping to the accumulated rotation
+    accumulatedRotation.x *= dampingFactor;
+    accumulatedRotation.y *= dampingFactor;
+
+    // Request the next animation frame
+    requestAnimationFrame(animate);
+}
 
 window.addEventListener("keydown", (e) => {
-    switch (e.key) {
-        case "a":
-            targetX -= cameraSpeed;
-            break;
+    handleKeyDown(e);
+});
+
+window.addEventListener("keyup", (e) => {
+    handleKeyUp(e);
+});
+
+function handleKeyDown(event) {
+    switch (event.key) {
         case "w":
-            targetZ -= cameraSpeed;
-            break;
-        case "d":
-            targetX += cameraSpeed;
+            movementForward = true;
             break;
         case "s":
-            targetZ += cameraSpeed;
+            movementBackward = true;
+            break;
+        case "a":
+            movementLeft = true;
+            break;
+        case "d":
+            movementRight = true;
             break;
     }
-})
+}
+
+function handleKeyUp(event) {
+    switch (event.key) {
+        case "w":
+            movementForward = false;
+            break;
+        case "s":
+            movementBackward = false;
+            break;
+        case "a":
+            movementLeft = false;
+            break;
+        case "d":
+            movementRight = false;
+            break;
+    }
+}
 
 function generateRandomNumber(min, max) {
     return Math.random() * (max - min) + min;
 }
 
-function updateCamera() {
-    // Gradually move the camera towards the target position
-    camera.position.x += (targetX - camera.position.x) * 0.1;
-    camera.position.y += (targetY - camera.position.y) * 0.1;
-    camera.position.z += (targetZ - camera.position.z) * 0.1;
+function updateCameraMovement() {
+    const movementSpeed = 0.06;
+
+    const movementVector = new THREE.Vector3();
+    if (movementForward) {
+        movementVector.z -= movementSpeed;
+    }
+    if (movementBackward) {
+        movementVector.z += movementSpeed;
+    }
+    if (movementLeft) {
+        movementVector.x -= movementSpeed;
+    }
+    if (movementRight) {
+        movementVector.x += movementSpeed;
+    }
+
+    // Rotate the movement vector to match the camera's orientation
+    movementVector.applyQuaternion(camera.quaternion);
+
+    // Update the camera's position
+    camera.position.add(movementVector);
 }
 
 //Função usada para definir um random
@@ -307,7 +406,7 @@ function objectRotation() {
 function render() {
 
     //translation (NO PROJETO O PROFESSOR QUER MEXER A CAMARA NAO O OBJETO)
-    updateCamera();
+    updateCameraMovement();
     //rotation
     objectRotation();
 
