@@ -1,6 +1,15 @@
 <html>
-   <head>
-      <script id="vertex-shader" type="x-shader/x-vertex">
+<head>
+    <script type="importmap">
+        {
+          "imports": {
+            "three": "https://unpkg.com/three@0.152.2/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.152.2/examples/jsm/"
+          }
+        }
+
+    </script>
+    <script id="vertex-shader" type="x-shader/x-vertex">
          precision mediump float;
 
          attribute vec3 vPosition;
@@ -14,8 +23,9 @@
             fTexCoord = vTexCoord;
             gl_Position = modelViewMatrix * vec4(vPosition, 1.0);
          }
-      </script>
-      <script id="fragment-shader" type="x-shader/x-fragment">
+
+    </script>
+    <script id="fragment-shader" type="x-shader/x-fragment">
          precision mediump float;
 
          varying vec2 fTexCoord;
@@ -26,48 +36,66 @@
          {
            gl_FragColor = texture2D( texture, fTexCoord );
          }
-      </script>
 
+    </script>
+    <script src="js/three.js"></script>
+    <script src="js/app.js" type="module"></script>
+    <script src="js/initShaders.js"></script>
+    <script src="js/gl-matrix-min.js"></script>
 
-   </head>
+    <style>
+        .container {
+            display: flex;
+        }
 
-   <body>
-      <div>
-         <div style="border: 5px solid black; width:800px ; height: 600px">
-            <canvas id="gl-canvas" width="800" height="600">
-               Sorry your browser does not support the canvas element
+        .left-side {
+            flex: 1;
+            padding: 20px;
+        }
+
+        .right-side {
+            flex: 1;
+            padding: 20px;
+        }
+    </style>
+
+</head>
+
+<body style="background-color: #c2c2c2; overflow: hidden">
+<div class="container">
+    <div class="left-side">
+        <div style="border: 5px solid black; width:800px ; height: 600px">
+            <canvas height="600" id="gl-canvas" width="800">
+                Sorry your browser does not support the canvas element
             </canvas>
-         </div>
-         <div>
-            <p>The following code generated <span id="nElements"></span> elements. Of the following, <span id="nCubes"></span> are cubes and <span id="nPyramids"></span> are pyramids.</p>
-            <div>
-               Type of light:
-               <label for="light_selector"></label><select id="light_selector">
-                  <option value="ambient">Ambient</option>
-                  <option value="directional">Directional</option>
-               </select>
-               <br>
-               <br>
-               Type of material:
-               <label for="material_selector"></label><select id="material_selector">
-                  <option value="basic">Basic</option>
-                  <option value="phong">Phong</option>
-                  <option value="lambert">Lambert</option>
-               </select>
-            </div>
+        </div>
+        <p>The following code generated <span id="nElements"></span> elements. Of the following, <span
+                id="nCubes"></span> are cubes , <span id="nPyramids"></span> are pyramids and the remaining <span
+                id="nObjects"></span> are 3D Objects.</p>
+    </div>
+    <div class="right-side">
+        <div>
+            <h1>Lighting</h1>
+            <h3>Type:</h3>
+            <label>
+                <select style="width: 91%">
+                    <option> Sun</option>
+                    <option> Ambient</option>
+                </select>
+            </label>
+            <h3>Direction: </h3>
+            X: <label for="light_x"></label><input id="light_x" type="number">
+            Y: <label for="light_y"></label><input id="light_y" type="number">
+            Z: <label for="light_z"></label><input id="light_z" type="number"><br>
+            <h3>Color: </h3>
+            R: <label for="colorR"></label><input id="colorR" placeholder="0.0-0.1" type="number">
+            G: <label for="colorG"></label><input id="colorG" placeholder="0.0-0.1" type="number">
+            B: <label for="colorB"></label><input id="colorB" placeholder="0.0-0.1" type="number"><br>
+            <br>
+            <button id="buttonLight">Apply Lighting</button>
+        </div>
+    </div>
 
-         </div>
-
-
-
-
-
-
-         <script src="js/three.js"></script>
-         <script src="js/app.js"></script>
-         <script src="js/initShaders.js"></script>
-         <script src="js/gl-matrix-min.js"></script>
-         <script src="js/app.js"></script>
-      </div>
-   </body>
+</div>
+</body>
 </html>
