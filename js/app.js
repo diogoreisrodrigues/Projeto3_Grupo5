@@ -8,7 +8,6 @@ onload = () => {
 const cubes = [];
 const pyramids = [];
 const objects = [];
-const cameraSpeed = 0.1;
 var light;
 var lightColor;
 var lightPosition;
@@ -19,12 +18,13 @@ let canvas, renderer, scene, camera, currentObject, material, angle, colorsArray
 
 let xPosition = 0.015, yPosition = 0.015, zPosition = 3;
 
-let targetX = xPosition, targetY = yPosition, targetZ = zPosition;
-
 document.getElementById('light-color').addEventListener('change', applyLighting);
 document.getElementById('buttonLight').addEventListener('click', applyLighting);
 
-
+let movementForward = false;
+let movementBackward = false;
+let movementLeft = false;
+let movementRight = false;
 
 async function init() {
 
@@ -60,37 +60,99 @@ async function init() {
     document.getElementById("nCubes").innerHTML = cubes.length;
     document.getElementById("nPyramids").innerHTML = pyramids.length;
     document.getElementById("nObjects").innerHTML = objects.length;
+
+    canvas.addEventListener("mousemove", onMouseMove, false);
+
     render();
 
 }
-
-
-window.addEventListener("keydown", (e) => {
-    switch (e.key) {
-        case "a":
-            targetX -= cameraSpeed;
-            break;
-        case "w":
-            targetZ -= cameraSpeed;
-            break;
-        case "d":
-            targetX += cameraSpeed;
-            break;
-        case "s":
-            targetZ += cameraSpeed;
-            break;
-    }
-})
 
 function generateRandomNumber(min, max) {
     return Math.random() * (max - min) + min;
 }
 
-function updateCamera() {
-    // Gradually move the camera towards the target position
-    camera.position.x += (targetX - camera.position.x) * 0.1;
-    camera.position.y += (targetY - camera.position.y) * 0.1;
-    camera.position.z += (targetZ - camera.position.z) * 0.1;
+function updateCameraMovement() {
+    const movementSpeed = 0.06;
+    const movementVector = new THREE.Vector3();
+
+    if (movementForward) {
+        movementVector.z -= movementSpeed;
+    }
+
+    if (movementBackward) {
+        movementVector.z += movementSpeed;
+    }
+
+    if (movementLeft) {
+        movementVector.x -= movementSpeed;
+    }
+
+    if (movementRight) {
+        movementVector.x += movementSpeed;
+    }
+
+    movementVector.applyQuaternion(camera.quaternion);
+    camera.position.add(movementVector);
+}
+
+function onMouseMove(event) {
+    // Calculate mouse position in normalized device coordinates
+    const mouse = {
+        x: (event.clientX / canvas.clientWidth) * 2 - 1,
+        y: -(event.clientY / canvas.clientHeight) * 2 + 1
+    };
+
+    const isMouseWithinCanvas = mouse.x >= -1 && mouse.x <= 1 && mouse.y >= -1 && mouse.y <= 1;
+    if (isMouseWithinCanvas) {
+        // Update the camera rotation based on mouse movement (inverted left and right)
+        const targetRotationX = Math.PI * mouse.y * 0.23;
+        const targetRotationY = Math.PI * -mouse.x * 0.23;
+
+        camera.rotation.x = targetRotationX;
+        camera.rotation.y = targetRotationY;
+    }
+}
+
+window.addEventListener("keydown", (e) => {
+    handleKeyDown(e);
+});
+
+window.addEventListener("keyup", (e) => {
+    handleKeyUp(e);
+});
+
+function handleKeyDown(event) {
+    switch (event.key) {
+        case "w":
+            movementForward = true;
+            break;
+        case "s":
+            movementBackward = true;
+            break;
+        case "a":
+            movementLeft = true;
+            break;
+        case "d":
+            movementRight = true;
+            break;
+    }
+}
+
+function handleKeyUp(event) {
+    switch (event.key) {
+        case "w":
+            movementForward = false;
+            break;
+        case "s":
+            movementBackward = false;
+            break;
+        case "a":
+            movementLeft = false;
+            break;
+        case "d":
+            movementRight = false;
+            break;
+    }
 }
 
 //Função usada para definir um random
@@ -287,15 +349,15 @@ function makePyramid() {
 function objectRotation() {
 
     for (const pyramid of pyramids) {
-        angle = generateRandomNumber(0, 0.15);
+        angle = generateRandomNumber(0, 0.08);
         pyramid.rotation.x += angle;
         pyramid.rotation.y += angle;
         pyramid.rotation.z += angle;
+        console.log(angle);
     }
 
-
     for (const cube of cubes) {
-        angle = generateRandomNumber(0, 0.15);
+        angle = generateRandomNumber(0, 0.08);
         cube.rotation.x += angle;
         cube.rotation.y += angle;
         cube.rotation.z += angle;
@@ -303,7 +365,7 @@ function objectRotation() {
     }
 
     for (const object of objects) {
-        angle = generateRandomNumber(0, 0.15);
+        angle = generateRandomNumber(0, 0.08);
         object.rotation.x += angle;
         object.rotation.y += angle;
         object.rotation.z += angle;
@@ -314,7 +376,7 @@ function objectRotation() {
 function render() {
 
     //translation (NO PROJETO O PROFESSOR QUER MEXER A CAMARA NAO O OBJETO)
-    updateCamera();
+    updateCameraMovement();
     //rotation
     objectRotation();
 
