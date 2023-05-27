@@ -8,6 +8,7 @@
           }
         }
 
+
     </script>
     <script id="vertex-shader" type="x-shader/x-vertex">
          precision mediump float;
@@ -24,6 +25,7 @@
             gl_Position = modelViewMatrix * vec4(vPosition, 1.0);
          }
 
+
     </script>
     <script id="fragment-shader" type="x-shader/x-fragment">
          precision mediump float;
@@ -36,6 +38,7 @@
          {
            gl_FragColor = texture2D( texture, fTexCoord );
          }
+
 
     </script>
     <script src="js/three.js"></script>
@@ -78,7 +81,7 @@
             <h1>Lighting</h1>
             <h3>Type:</h3>
             <label>
-                <select style="width: 91%" id="light-type">
+                <select id="light-type" style="width: 91%">
                     <option value="ambient">Ambient</option>
                     <option value="directional">Directional</option>
                     <option value="spot">Spotlight</option>
@@ -89,10 +92,11 @@
             Y: <label for="light-y"></label><input id="light-y" type="number">
             Z: <label for="light-z"></label><input id="light-z" type="number"><br>
             <h3>Light Color:</h3>
-            <input type="color" id="light-color" value="#ffffff">
+            <input id="light-color" type="color" value="#ffffff">
+            <br>
             <br>
             <label for="light-intensity">Light Intensity:</label>
-            <input type="range" id="light-intensity" min="0" max="1" step="0.1" value="1"><br><br>
+            <input id="light-intensity" max="1" min="0" step="0.1" type="range" value="1"><br><br>
             <button id="buttonLight">Apply Lighting</button>
         </div>
     </div>
