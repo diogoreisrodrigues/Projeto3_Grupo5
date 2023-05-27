@@ -14,9 +14,9 @@ var lightPosition;
 var lightIntensity;
 
 
-
 let canvas, renderer, scene, camera, currentObject, material, angle, colorsArrayCube, vertexColorsCube,
-    colorsArrayPyramid, vertexColorsPyramid, nElements, choseColorOrTexture, typeOfElements, ambientLight, sunlight, spotlight;
+    colorsArrayPyramid, vertexColorsPyramid, nElements, choseColorOrTexture, typeOfElements, ambientLight, sunlight,
+    spotlight;
 
 let xPosition = 0.015, yPosition = 0.015, zPosition = 3;
 
@@ -112,8 +112,7 @@ function updateCameraMovement() {
 function onMouseMove(event) {
     // Calculate mouse position in normalized device coordinates
     const mouse = {
-        x: (event.clientX / canvas.clientWidth) * 2 - 1,
-        y: -(event.clientY / canvas.clientHeight) * 2 + 1
+        x: (event.clientX / canvas.clientWidth) * 2 - 1, y: -(event.clientY / canvas.clientHeight) * 2 + 1
     };
 
     const isMouseWithinCanvas = mouse.x >= -1 && mouse.x <= 1 && mouse.y >= -1 && mouse.y <= 1;
@@ -126,6 +125,7 @@ function onMouseMove(event) {
         camera.rotation.y = targetRotationY;
     }
 }
+
 /**
  * Handles the keydown event.
  * @param {KeyboardEvent} event - The keydown event object.
@@ -201,7 +201,7 @@ async function generateObjects() {
                 makePyramid();
                 pyramids.push(currentObject);
             }
-        } else {       //TODO: Entender como e que importo o.obj e as texturas
+        } else {
 
             currentObject = await make3DObject();
             scene.add(currentObject);
@@ -304,7 +304,6 @@ function applyLighting() {
 }
 
 
-
 /**
  * Creates a cube with random dimensions, colors, and texture.
  */
@@ -395,6 +394,7 @@ function makePyramid() {
     scene.add(pyramid);
 
 }
+
 /**
  * Rotates the pyramids, cubes, and objects in the scene.
  */
