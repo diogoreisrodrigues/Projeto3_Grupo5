@@ -14,8 +14,10 @@ var lightColor;
 var lightPosition;
 var lightIntensity;
 
+
+
 let canvas, renderer, scene, camera, currentObject, material, angle, colorsArrayCube, vertexColorsCube,
-    colorsArrayPyramid, vertexColorsPyramid, nElements, choseColorOrTexture, typeOfElements, ambientLight, sunlight;
+    colorsArrayPyramid, vertexColorsPyramid, nElements, choseColorOrTexture, typeOfElements, ambientLight, sunlight, spotlight;
 
 let xPosition = 0.015, yPosition = 0.015, zPosition = 3;
 
@@ -46,11 +48,7 @@ async function init() {
     camera.position.y = yPosition;
     camera.position.z = zPosition;
 
-    ambientLight = new THREE.AmbientLight(0x888888);
-    scene.add(ambientLight);
-
-    light = new THREE.DirectionalLight(0x000000, 0.5);
-    light.position.set(1.0, -4.0, -2.0);
+    light = new THREE.AmbientLight(0x888888);
     scene.add(light);
 
     //N de elementos a ser gerados na cena, assim como o uso de um innerHTML para dar display no index.html
@@ -180,7 +178,7 @@ async function make3DObject() {
 
 //TODO: Porquê que a luz não é adicionada à cena?
 function applyLighting() {
-
+    const lightType = document.getElementById('light-type').value;
     lightColor = document.getElementById('light-color').value;
     lightIntensity = parseFloat(document.getElementById('light-intensity').value);
 
@@ -190,11 +188,22 @@ function applyLighting() {
         z: parseFloat(document.getElementById('light-z').value)
     };
 
-    // Update the light's color and intensity
-    light.color.set(lightColor);
-    light.intensity = lightIntensity;
-    light.position.set(lightPosition.x, lightPosition.y, lightPosition.z);
+    scene.remove(light);
+
+    if (lightType === 'ambient') {
+        light = new THREE.AmbientLight(lightColor, lightIntensity);
+        scene.add(light);
+    } else if (lightType === 'spot') {
+        light = new THREE.SpotLight(lightColor, lightIntensity);
+        light.position.set(lightPosition.x, lightPosition.y, lightPosition.z);
+        scene.add(light);
+    } else {
+        light = new THREE.DirectionalLight(lightColor, lightIntensity);
+        light.position.set(lightPosition.x, lightPosition.y, lightPosition.z);
+        scene.add(light);
+    }
 }
+
 
 
 //Função de criação do cubo
