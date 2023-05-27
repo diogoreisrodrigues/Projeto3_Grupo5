@@ -8,7 +8,6 @@ onload = () => {
 const cubes = [];
 const pyramids = [];
 const objects = [];
-const cameraSpeed = 0.1;
 var light;
 var lightColor;
 var lightPosition;
@@ -21,13 +20,17 @@ let canvas, renderer, scene, camera, currentObject, material, angle, colorsArray
 
 let xPosition = 0.015, yPosition = 0.015, zPosition = 3;
 
-let targetX = xPosition, targetY = yPosition, targetZ = zPosition;
-
 document.getElementById('light-color').addEventListener('change', applyLighting);
 document.getElementById('buttonLight').addEventListener('click', applyLighting);
 
+let movementForward = false;
+let movementBackward = false;
+let movementLeft = false;
+let movementRight = false;
 
-
+/**
+ * Initializes the 3D scene.
+ */
 async function init() {
 
     canvas = document.getElementById('gl-canvas');
@@ -58,41 +61,132 @@ async function init() {
     document.getElementById("nCubes").innerHTML = cubes.length;
     document.getElementById("nPyramids").innerHTML = pyramids.length;
     document.getElementById("nObjects").innerHTML = objects.length;
+
+    canvas.addEventListener("mousemove", onMouseMove, false);
+
     render();
 
 }
 
-
-window.addEventListener("keydown", (e) => {
-    switch (e.key) {
-        case "a":
-            targetX -= cameraSpeed;
-            break;
-        case "w":
-            targetZ -= cameraSpeed;
-            break;
-        case "d":
-            targetX += cameraSpeed;
-            break;
-        case "s":
-            targetZ += cameraSpeed;
-            break;
-    }
-})
-
+/**
+ * Generates a random number between the given range.
+ * @param {number} min - The minimum value of the range.
+ * @param {number} max - The maximum value of the range.
+ * @returns {number} - The generated random number.
+ */
 function generateRandomNumber(min, max) {
     return Math.random() * (max - min) + min;
 }
 
-function updateCamera() {
-    // Gradually move the camera towards the target position
-    camera.position.x += (targetX - camera.position.x) * 0.1;
-    camera.position.y += (targetY - camera.position.y) * 0.1;
-    camera.position.z += (targetZ - camera.position.z) * 0.1;
+/**
+ * Updates the movement of the camera based on the keyboard inputs.
+ */
+function updateCameraMovement() {
+    const movementSpeed = 0.06;
+    const movementVector = new THREE.Vector3();
+
+    if (movementForward) {
+        movementVector.z -= movementSpeed;
+    }
+
+    if (movementBackward) {
+        movementVector.z += movementSpeed;
+    }
+
+    if (movementLeft) {
+        movementVector.x -= movementSpeed;
+    }
+
+    if (movementRight) {
+        movementVector.x += movementSpeed;
+    }
+
+    movementVector.applyQuaternion(camera.quaternion);
+    camera.position.add(movementVector);
 }
 
-//Função usada para definir um random
+/**
+ * Handles the mouse movement event.
+ * @param {MouseEvent} event - The mouse event object.
+ */
+function onMouseMove(event) {
+    // Calculate mouse position in normalized device coordinates
+    const mouse = {
+        x: (event.clientX / canvas.clientWidth) * 2 - 1,
+        y: -(event.clientY / canvas.clientHeight) * 2 + 1
+    };
 
+    const isMouseWithinCanvas = mouse.x >= -1 && mouse.x <= 1 && mouse.y >= -1 && mouse.y <= 1;
+    if (isMouseWithinCanvas) {
+        // Update the camera rotation based on mouse movement (inverted left and right)
+        const targetRotationX = Math.PI * mouse.y * 0.23;
+        const targetRotationY = Math.PI * -mouse.x * 0.23;
+
+        camera.rotation.x = targetRotationX;
+        camera.rotation.y = targetRotationY;
+    }
+}
+/**
+ * Handles the keydown event.
+ * @param {KeyboardEvent} event - The keydown event object.
+ */
+window.addEventListener("keydown", (e) => {
+    handleKeyDown(e);
+});
+
+/**
+ * Handles the keyup event.
+ * @param {KeyboardEvent} event - The keyup event object.
+ */
+window.addEventListener("keyup", (e) => {
+    handleKeyUp(e);
+});
+
+/**
+ * Handles the keydown event and updates the movement variables accordingly.
+ * @param {KeyboardEvent} event - The keydown event object.
+ */
+function handleKeyDown(event) {
+    switch (event.key) {
+        case "w":
+            movementForward = true;
+            break;
+        case "s":
+            movementBackward = true;
+            break;
+        case "a":
+            movementLeft = true;
+            break;
+        case "d":
+            movementRight = true;
+            break;
+    }
+}
+
+/**
+ * Handles the keyup event and updates the movement variables accordingly.
+ * @param {KeyboardEvent} event - The keyup event object.
+ */
+function handleKeyUp(event) {
+    switch (event.key) {
+        case "w":
+            movementForward = false;
+            break;
+        case "s":
+            movementBackward = false;
+            break;
+        case "a":
+            movementLeft = false;
+            break;
+        case "d":
+            movementRight = false;
+            break;
+    }
+}
+
+/**
+ * Generates objects in the scene based on random parameters.
+ */
 async function generateObjects() {
 
     nElements = Math.floor(generateRandomNumber(5, 30));
@@ -118,7 +212,10 @@ async function generateObjects() {
 
 }
 
-//TODO: Porquê que o objeto não está a ser adicionado?
+/**
+ * Creates a 3D object by loading an .obj file and applying textures.
+ * @returns {Promise<THREE.Object3D>} A promise that resolves with the created 3D object.
+ */
 async function make3DObject() {
 
     return new Promise((resolve, reject) => {
@@ -176,7 +273,9 @@ async function make3DObject() {
 
 }
 
-//TODO: Porquê que a luz não é adicionada à cena?
+/**
+ * Applies lighting to the scene based on the user-specified parameters.
+ */
 function applyLighting() {
     const lightType = document.getElementById('light-type').value;
     lightColor = document.getElementById('light-color').value;
@@ -206,7 +305,9 @@ function applyLighting() {
 
 
 
-//Função de criação do cubo
+/**
+ * Creates a cube with random dimensions, colors, and texture.
+ */
 function makeCube() {
 
     //Gera valor aleatorio entre 0.1 e 0.5 para dimensão do cubo
@@ -253,7 +354,9 @@ function makeCube() {
 
 }
 
-//TODO:Corrigir, uma face e a base estão a ficar sem cor
+/**
+ * Creates a pyramid with random dimensions, colors, and texture.
+ */
 function makePyramid() {
 
     choseColorOrTexture = generateRandomNumber(0, 100);
@@ -292,19 +395,21 @@ function makePyramid() {
     scene.add(pyramid);
 
 }
-
+/**
+ * Rotates the pyramids, cubes, and objects in the scene.
+ */
 function objectRotation() {
 
     for (const pyramid of pyramids) {
-        angle = generateRandomNumber(0, 0.15);
+        angle = generateRandomNumber(0, 0.08);
         pyramid.rotation.x += angle;
         pyramid.rotation.y += angle;
         pyramid.rotation.z += angle;
+        console.log(angle);
     }
 
-
     for (const cube of cubes) {
-        angle = generateRandomNumber(0, 0.15);
+        angle = generateRandomNumber(0, 0.08);
         cube.rotation.x += angle;
         cube.rotation.y += angle;
         cube.rotation.z += angle;
@@ -312,7 +417,7 @@ function objectRotation() {
     }
 
     for (const object of objects) {
-        angle = generateRandomNumber(0, 0.15);
+        angle = generateRandomNumber(0, 0.08);
         object.rotation.x += angle;
         object.rotation.y += angle;
         object.rotation.z += angle;
@@ -320,10 +425,13 @@ function objectRotation() {
 
 }
 
+/**
+ * Renders the 3D scene.
+ */
 function render() {
 
     //translation (NO PROJETO O PROFESSOR QUER MEXER A CAMARA NAO O OBJETO)
-    updateCamera();
+    updateCameraMovement();
     //rotation
     objectRotation();
 
